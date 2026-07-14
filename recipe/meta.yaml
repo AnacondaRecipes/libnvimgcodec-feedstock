@@ -73,14 +73,12 @@ outputs:
         - include/**  # [linux]
         - lib/libnvimgcodec.so  # [linux]
         - lib/cmake/nvimgcodec  # [linux]
-        - etc/**  # [linux]
         - lib/extensions/*.so  # [linux]
         # FIXME: Drop static libraries once CMake config supports it
         - lib/libnvimgcodec_static.a  # [linux]
         - Library/include/**  # [win]
         - Library/lib/nvimgcodec.lib  # [win]
         - Library/lib/cmake/nvimgcodec  # [win]
-        - Library/etc/**  # [win]
         - Library/lib/extensions/*.lib  # [win]
         # FIXME: Drop static libraries once CMake config supports it
         - Library/lib/nvimgcodec_static.lib  # [win]
@@ -89,6 +87,8 @@ outputs:
         - lib/libnvimgcodec.so.*  # [linux]
         - lib/extensions/*.so.*  # [linux]
         - etc/conda/**  # [linux]
+        - etc/**  # [linux]
+        - Library/etc/**  # [win]
     requirements:
       host:
         - {{ pin_subpackage('libnvimgcodec' ~ somajor, exact=True) }}
@@ -115,7 +115,7 @@ outputs:
         - test -f ${PREFIX}/lib/libnvimgcodec.so.{{ somajor }}  # [linux]
         - test -f ${PREFIX}/lib/libnvimgcodec.so.{{ version }}  # [linux]
         - if not exist %LIBRARY_LIB%\\nvimgcodec.lib exit 1  # [win]
-        - test -f ${PREFIX}/etc/ld.so.conf.d/nvimgcodec.conf  # [unix]
+        - test ! -f ${PREFIX}/etc/ld.so.conf.d/nvimgcodec.conf  # [unix]
         - test -f ${PREFIX}/lib/cmake/nvimgcodec/nvimgcodecConfig.cmake  # [unix]
         - cmake ${CMAKE_ARGS} -GNinja test  # [unix and build_platform == target_platform]
         - cmake --build .  # [unix and build_platform == target_platform]
