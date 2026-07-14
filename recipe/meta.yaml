@@ -81,7 +81,7 @@ outputs:
         - Library/lib/nvimgcodec.lib  # [win]
         - Library/lib/cmake/nvimgcodec  # [win]
         - Library/etc/**  # [win]
-        - Library/bin/extensions/*.lib  # [win]
+        - Library/lib/extensions/*.lib  # [win]
         # FIXME: Drop static libraries once CMake config supports it
         - Library/lib/nvimgcodec_static.lib  # [win]
       exclude:
