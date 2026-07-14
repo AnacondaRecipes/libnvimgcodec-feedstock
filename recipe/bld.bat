@@ -32,7 +32,8 @@ set NVIMG_EXT_ARGS= ^
     -DBUILD_NVJPEG2K_EXT:BOOL=ON ^
     -DBUILD_NVPNM_EXT:BOOL=ON ^
     -DBUILD_NVTIFF_EXT:BOOL=ON ^
-    -DBUILD_OPENCV_EXT:BOOL=ON
+    -DBUILD_OPENCV_EXT:BOOL=ON ^
+    -DNVIMGCODEC_INSTALL_EXTENSIONS_DIR:PATH=bin/extensions
 
 set NVIMG_PYTHON_ARGS= ^
     -DPython_EXECUTABLE=%PYTHON% ^
@@ -54,8 +55,5 @@ cmake --build . -v
 if errorlevel 1 exit 1
 
 cmake --install .
-
-del %LIBRARY_PREFIX%\LICENSE.txt
-del %LIBRARY_PREFIX%\Acknowledgements.txt
 
 endlocal
