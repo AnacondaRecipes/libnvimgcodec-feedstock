@@ -270,8 +270,8 @@ outputs:
 
   - name: libnvimgcodec-libopencv-ext
     files:
-      - lib/extensions/*libopencv*.so.*  # [linux]
-      - Library/bin/extensions/*opencv*.dll  # [win]
+      - lib/extensions/*libopencv_ext.so.*  # [linux]
+      - Library/bin/extensions/*opencv_ext*.dll  # [win]
     requirements:
       build:
         - {{ compiler('c') }}
