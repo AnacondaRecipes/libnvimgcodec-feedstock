@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-{% set version = "0.8.0" %}
+{% set version = "0.9.0" %}
 {% set somajor = version.split('.')[0] %}
 
 package:
@@ -20,15 +20,13 @@ package:
 
 source:
   url: https://github.com/NVIDIA/nvImageCodec/archive/refs/tags/v{{ version }}.tar.gz
-  sha256: d3beeb09fbecd0ff24800a6549d8edb7739cf1d44554f9c92ee31a0cf8d4890b
+  sha256: cd92bec0c5293685233d88840d63383b22eaf04a12167308fe3c7c6087ff40f7
   patches:
-    - patches/0001-BLD-Use-only-dynamic-shared-library-links-to-CUDA-ta.patch
-    - patches/0002-BLD-Move-CMake-config-install-directory.patch
-    - patches/0003-BLD-Make-find_package-OpenCV-verbose-and-required.patch
-    - patches/0004-BLD-Disable-non-standard-CUDA-arch-checking.patch
-    - patches/0005-BUG-Skip-runtime-nvtiff-check-when-linking-at-build-.patch
+    - patches/0002-BLD-Make-find_package-OpenCV-verbose-and-required.patch
+    - patches/0003-BLD-Disable-non-standard-CUDA-arch-checking.patch
+
 build:
-  number: 2
+  number: 0
   skip: true  # [((cuda_compiler_version or "None") == "None")]
   # skip: true  # [((cuda_compiler_version or "") == "12.6") and ((libopencv or "") == "4.10") ]
 requirements:
@@ -74,15 +72,13 @@ outputs:
         - include/**  # [linux]
         - lib/libnvimgcodec.so  # [linux]
         - lib/cmake/nvimgcodec  # [linux]
-        - etc/**  # [linux]
         - lib/extensions/*.so  # [linux]
         # FIXME: Drop static libraries once CMake config supports it
         - lib/libnvimgcodec_static.a  # [linux]
         - Library/include/**  # [win]
         - Library/lib/nvimgcodec.lib  # [win]
         - Library/lib/cmake/nvimgcodec  # [win]
-        - Library/etc/**  # [win]
-        - Library/extensions/*.lib  # [win]
+        - Library/lib/extensions/*.lib  # [win]
         # FIXME: Drop static libraries once CMake config supports it
         - Library/lib/nvimgcodec_static.lib  # [win]
       exclude:
@@ -90,6 +86,8 @@ outputs:
         - lib/libnvimgcodec.so.*  # [linux]
         - lib/extensions/*.so.*  # [linux]
         - etc/conda/**  # [linux]
+        - etc/**  # [linux]
+        - Library/etc/**  # [win]
     requirements:
       host:
         - {{ pin_subpackage('libnvimgcodec' ~ somajor, exact=True) }}
@@ -116,7 +114,7 @@ outputs:
         - test -f ${PREFIX}/lib/libnvimgcodec.so.{{ somajor }}  # [linux]
         - test -f ${PREFIX}/lib/libnvimgcodec.so.{{ version }}  # [linux]
         - if not exist %LIBRARY_LIB%\\nvimgcodec.lib exit 1  # [win]
-        - test -f ${PREFIX}/etc/ld.so.conf.d/nvimgcodec.conf  # [unix]
+        - test ! -f ${PREFIX}/etc/ld.so.conf.d/nvimgcodec.conf  # [unix]
         - test -f ${PREFIX}/lib/cmake/nvimgcodec/nvimgcodecConfig.cmake  # [unix]
         - cmake ${CMAKE_ARGS} -GNinja test  # [unix and build_platform == target_platform]
         - cmake --build .  # [unix and build_platform == target_platform]
@@ -149,17 +147,15 @@ outputs:
       include:
         - lib/libnvimgcodec.so.*  # [linux]
         - lib/extensions/*.so.*  # [linux]
-        - etc/conda/activate.d/libnvimgcodec_activate.sh  # [linux]
-        - etc/conda/deactivate.d/libnvimgcodec_deactivate.sh  # [linux]
         - Library/bin/nvimgcodec_{{ somajor }}.dll  # [win]
-        - Library/extensions/*.dll  # [win]
+        - Library/bin/extensions/*.dll  # [win]
       exclude:
         - lib/extensions/*opencv*  # [linux]
         - lib/extensions/*libtiff*  # [linux]
         - lib/extensions/*libjpeg*  # [linux]
-        - Library/extensions/*opencv*  # [win]
-        - Library/extensions/*libtiff*  # [win]
-        - Library/extensions/*libjpeg*  # [win]
+        - Library/bin/extensions/*opencv*  # [win]
+        - Library/bin/extensions/*libtiff*  # [win]
+        - Library/bin/extensions/*libjpeg*  # [win]
     build:
       missing_dso_whitelist:
         - '*/libcuda.so.*'  # [linux]
@@ -196,19 +192,17 @@ outputs:
       commands:
         - test -f ${PREFIX}/lib/libnvimgcodec.so.{{ somajor }}  # [linux]
         - test -f ${PREFIX}/lib/libnvimgcodec.so.{{ version }}  # [linux]
-        - test -f ${PREFIX}/etc/conda/activate.d/libnvimgcodec_activate.sh  # [linux]
-        - test -f ${PREFIX}/etc/conda/deactivate.d/libnvimgcodec_deactivate.sh  # [linux]
         - test -f ${PREFIX}/lib/extensions/libnvbmp_ext.so.{{ version }}  # [linux]
         - test -f ${PREFIX}/lib/extensions/libnvjpeg_ext.so.{{ version }}  # [linux]
         - test -f ${PREFIX}/lib/extensions/libnvjpeg2k_ext.so.{{ version }}  # [linux]
         - test -f ${PREFIX}/lib/extensions/libnvpnm_ext.so.{{ version }}  # [linux]
         - test -f ${PREFIX}/lib/extensions/libnvtiff_ext.so.{{ version }}  # [linux]
         - if not exist %LIBRARY_BIN%\\nvimgcodec_{{ somajor }}.dll exit 1  # [win]
-        - if not exist %LIBRARY_PREFIX%\\extensions\\nvbmp_ext_{{ somajor }}.dll exit 1  # [win]
-        - if not exist %LIBRARY_PREFIX%\\extensions\\nvjpeg_ext_{{ somajor }}.dll exit 1  # [win]
-        - if not exist %LIBRARY_PREFIX%\\extensions\\nvjpeg2k_ext_{{ somajor }}.dll exit 1  # [win]
-        - if not exist %LIBRARY_PREFIX%\\extensions\\nvpnm_ext_{{ somajor }}.dll exit 1  # [win]
-        - if not exist %LIBRARY_PREFIX%\\extensions\\nvtiff_ext_{{ somajor }}.dll exit 1  # [win]
+        - if not exist %LIBRARY_BIN%\\extensions\\nvbmp_ext_{{ somajor }}.dll exit 1  # [win]
+        - if not exist %LIBRARY_BIN%\\extensions\\nvjpeg_ext_{{ somajor }}.dll exit 1  # [win]
+        - if not exist %LIBRARY_BIN%\\extensions\\nvjpeg2k_ext_{{ somajor }}.dll exit 1  # [win]
+        - if not exist %LIBRARY_BIN%\\extensions\\nvpnm_ext_{{ somajor }}.dll exit 1  # [win]
+        - if not exist %LIBRARY_BIN%\\extensions\\nvtiff_ext_{{ somajor }}.dll exit 1  # [win]
     about:
       summary: The nvImageCodec runtime library.
       description: >-
@@ -224,7 +218,7 @@ outputs:
   - name: libnvimgcodec-libjpeg-turbo-ext
     files:
       - lib/extensions/*libjpeg*.so.*  # [linux]
-      - Library/extensions/*libjpeg*.dll  # [win]
+      - Library/bin/extensions/*libjpeg*.dll  # [win]
     requirements:
       build:
         - {{ compiler('c') }}
@@ -236,7 +230,7 @@ outputs:
     test:
       commands:
         - test -f ${PREFIX}/lib/extensions/libjpeg_turbo_ext.so.{{ version }}  # [linux]
-        - if not exist %LIBRARY_PREFIX%\\extensions\\libjpeg_turbo_ext_{{ somajor }}.dll exit 1  # [win]
+        - if not exist %LIBRARY_BIN%\\extensions\\libjpeg_turbo_ext_{{ somajor }}.dll exit 1  # [win]
     about:
       summary: Install this package to enable libjpeg extensions for nvImageCodec
       description: >-
@@ -250,7 +244,7 @@ outputs:
   - name: libnvimgcodec-libtiff-ext
     files:
       - lib/extensions/*libtiff*.so.*  # [linux]
-      - Library/extensions/*libtiff*.dll  # [win]
+      - Library/bin/extensions/*libtiff*.dll  # [win]
     requirements:
       build:
         - {{ compiler('c') }}
@@ -262,7 +256,7 @@ outputs:
     test:
       commands:
         - test -f ${PREFIX}/lib/extensions/libtiff_ext.so.{{ version }}  # [linux]
-        - if not exist %LIBRARY_PREFIX%\\extensions\\libtiff_ext_{{ somajor }}.dll exit 1  # [win]
+        - if not exist %LIBRARY_BIN%\\extensions\\libtiff_ext_{{ somajor }}.dll exit 1  # [win]
     about:
       summary: Install this package to enable libtiff extensions for nvImageCodec
       description: >-
@@ -275,8 +269,8 @@ outputs:
 
   - name: libnvimgcodec-libopencv-ext
     files:
-      - lib/extensions/*libopencv*.so.*  # [linux]
-      - Library/extensions/*opencv*.dll  # [win]
+      - lib/extensions/*libopencv_ext.so.*  # [linux]
+      - Library/bin/extensions/*opencv_ext*.dll  # [win]
     requirements:
       build:
         - {{ compiler('c') }}
@@ -289,7 +283,7 @@ outputs:
     test:
       commands:
         - test -f ${PREFIX}/lib/extensions/libopencv_ext.so.{{ version }}  # [linux]
-        - if not exist %LIBRARY_PREFIX%\\extensions\\opencv_ext_{{ somajor }}.dll exit 1  # [win]
+        - if not exist %LIBRARY_BIN%\\extensions\\opencv_ext_{{ somajor }}.dll exit 1  # [win]
     about:
       summary: Install this package to enable opencv extensions for nvImageCodec
       description: >-

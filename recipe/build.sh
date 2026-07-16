@@ -28,8 +28,19 @@ nvimg_build_args=(
     -DBUILD_LIBRARY:BOOL=ON
     -DBUILD_SHARED_LIBS:BOOL=ON
     -DBUILD_STATIC_LIBS:BOOL=OFF
+    -DNVIMGCODEC_INSTALL_LIBDIR:PATH=lib
+    -DNVIMGCODEC_INSTALL_BINDIR:PATH=lib
 # "DYNAMIC_LINK" means using dlopen, but we want to link to shared libraries.
     -DWITH_DYNAMIC_LINK:BOOL=OFF
+    -DWITH_SHARED_CUDA_LIBS:BOOL=ON
+# Stay inside the conda env: ignore /usr/local so find_package() doesn't pick
+# up system installs (e.g. a system TIFF config that drags /usr/local/include
+# into the global system include path).
+    -DCMAKE_IGNORE_PREFIX_PATH=/usr/local
+# The system package installs an absolute /etc/ld.so.conf.d drop-in. Conda
+# packages rely on rpaths and package metadata instead, and must not write
+# outside the build prefix during cmake --install.
+    -DNVIMGCODEC_INSTALL_LD_SO_CONF:BOOL=OFF
 # Extension args
     -DBUILD_EXTENSIONS:BOOL=ON
     -DBUILD_LIBJPEG_TURBO_EXT:BOOL=ON
@@ -40,6 +51,8 @@ nvimg_build_args=(
     -DBUILD_NVPNM_EXT:BOOL=ON
     -DBUILD_NVTIFF_EXT:BOOL=ON
     -DBUILD_OPENCV_EXT:BOOL=ON
+    -DNVIMGCODEC_INSTALL_EXTENSIONS_DIR:PATH=lib/extensions
+    -DNVIMGCODEC_INSTALL_EXTENSION_LIBDIR:PATH=lib/extensions
 # Python args
     -DPython_EXECUTABLE=$PYTHON
     -DBUILD_PYTHON:BOOL=OFF
@@ -55,21 +68,3 @@ cmake ${CMAKE_ARGS} -GNinja "${nvimg_build_args[@]}" ${SRC_DIR}
 cmake --build . -v
 
 cmake --install . --strip
-
-rm $PREFIX/LICENSE.txt
-rm $PREFIX/Acknowledgements.txt
-
-# nvimgcodec <= 0.8 hard-codes its default plugin search path to <so_dir>/../extensions
-# (i.e. $PREFIX/extensions when the .so lives in $PREFIX/lib). That doesn't fit a
-# multi-output conda package well — extensions belong under lib/ alongside the .so so
-# they ride run_constrained subpackages — so we relocate them here, patch the CMake
-# config to match, and install activation scripts below to override the runtime search
-# path via NVIMGCODEC_EXTENSIONS_PATH.
-mv -v $PREFIX/extensions $PREFIX/lib/extensions
-sed -i 's|"${_PACKAGE_ROOTDIR}/extensions"|"${_PACKAGE_ROOTDIR}/lib/extensions"|g' $PREFIX/lib/cmake/nvimgcodec/nvimgcodecConfig.cmake
-
-# Install the activate/deactivate scripts that point NVIMGCODEC_EXTENSIONS_PATH at the
-# moved extensions directory whenever the env is active.
-mkdir -p $PREFIX/etc/conda/activate.d $PREFIX/etc/conda/deactivate.d
-cp $RECIPE_DIR/activate-libnvimgcodec.sh   $PREFIX/etc/conda/activate.d/libnvimgcodec_activate.sh
-cp $RECIPE_DIR/deactivate-libnvimgcodec.sh $PREFIX/etc/conda/deactivate.d/libnvimgcodec_deactivate.sh
