@@ -1,0 +1,8 @@
+# Refer to ".ci_support" directory for selecting the correct
+# 'cuda_compiler_version' and 'arm_variant_type' values
+cuda_compiler_version:
+  - "12.9"
+  - "13.0"
+
+arm_variant_type:  # [linux and aarch64]
+  - sbsa           # [linux and aarch64]

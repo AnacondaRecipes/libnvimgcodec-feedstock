@@ -1,0 +1,11 @@
+anaconda_config_version: 1
+upstream_sources:
+  - webpage:
+      url: https://api.anaconda.org/package/conda-forge/libnvimgcodec
+      regex: '"version":\s*"([^"]+)"'
+    packages:
+      - libnvimgcodec-dev
+      - libnvimgcodec
+      - libnvimgcodec-libjpeg-turbo-ext
+      - libnvimgcodec-libtiff-ext
+      - libnvimgcodec-libopencv-ext

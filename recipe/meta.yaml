@@ -27,17 +27,16 @@ source:
 
 build:
   number: 0
-  skip: true  # [((cuda_compiler_version or "None") == "None")]
-  # skip: true  # [((cuda_compiler_version or "") == "12.6") and ((libopencv or "") == "4.10") ]
+  skip: true  # [osx]
 requirements:
   build:
     - {{ compiler('c') }}
     - {{ compiler('cuda') }}
     - {{ compiler('cxx') }}
     - {{ stdlib('c') }}
-    - arm-variant * {{ arm_variant_type }}  # [linux and aarch64 and cuda_compiler_version != "None"]
+    - arm-variant * {{ arm_variant_type }}  # [linux and aarch64]
     - cmake 3.*
-    - ninja
+    - ninja-base
     - pkg-config
   host:
     - cuda-version {{ cuda_compiler_version }}
@@ -51,10 +50,10 @@ requirements:
     - libjpeg-turbo
     - libopencv
     - libopencv * headless*
-    - libtiff
+    - libtiff {{ libtiff }}
     - nvtx-c
-    - zlib
-    - zstd
+    - zlib {{ zlib }}
+    - zstd {{ zstd }}
 
 outputs:
 
@@ -92,7 +91,7 @@ outputs:
       host:
         - {{ pin_subpackage('libnvimgcodec' ~ somajor, exact=True) }}
         - cuda-version {{ cuda_compiler_version }}
-        - arm-variant * {{ arm_variant_type }}  # [linux and aarch64 and cuda_compiler_version != "None"]
+        - arm-variant * {{ arm_variant_type }}  # [linux and aarch64]
       run:
         - {{ pin_subpackage('libnvimgcodec' ~ somajor, exact=True) }}
         - {{ pin_compatible('cuda-version', min_pin="x", max_pin="x") }}
@@ -100,14 +99,14 @@ outputs:
       files:
         - test
       script: run_test.bat  # [win]
-      requires:   # [build_platform == target_platform]
-        - {{ compiler('c') }}  # [build_platform == target_platform]
-        - {{ compiler('cxx') }}  # [build_platform == target_platform]
-        - {{ compiler('cuda') }}  # [build_platform == target_platform]
-        - {{ stdlib('c') }}  # [build_platform == target_platform]
-        - cmake   # [build_platform == target_platform]
-        - ninja  # [build_platform == target_platform]
-        - cuda-cudart-dev  # [build_platform == target_platform]
+      requires:
+        - {{ compiler('c') }}
+        - {{ compiler('cxx') }}
+        - {{ compiler('cuda') }}
+        - {{ stdlib('c') }}
+        - cmake
+        - ninja-base
+        - cuda-cudart-dev
       commands:
         - test -f ${PREFIX}/include/nvimgcodec.h  # [linux]
         - if not exist %LIBRARY_INC%\\nvimgcodec.h exit 1  # [win]
@@ -116,8 +115,8 @@ outputs:
         - if not exist %LIBRARY_LIB%\\nvimgcodec.lib exit 1  # [win]
         - test ! -f ${PREFIX}/etc/ld.so.conf.d/nvimgcodec.conf  # [unix]
         - test -f ${PREFIX}/lib/cmake/nvimgcodec/nvimgcodecConfig.cmake  # [unix]
-        - cmake ${CMAKE_ARGS} -GNinja test  # [unix and build_platform == target_platform]
-        - cmake --build .  # [unix and build_platform == target_platform]
+        - cmake ${CMAKE_ARGS} -GNinja test  # [unix]
+        - cmake --build .  # [unix]
         # - test ! -f ${PREFIX}/lib/libnvimgcodec_static.a  # [unix]
 
   - name: libnvimgcodec
@@ -126,7 +125,7 @@ outputs:
     requirements:
       host:
         - {{ pin_subpackage('libnvimgcodec' ~ somajor, max_pin=None) }}
-        - arm-variant * {{ arm_variant_type }}  # [linux and aarch64 and cuda_compiler_version != "None"]
+        - arm-variant * {{ arm_variant_type }}  # [linux and aarch64]
       run:
         # FIXME: max_pin=None when library is stable
         - {{ pin_subpackage('libnvimgcodec' ~ somajor, max_pin="x.x.x") }}
@@ -141,6 +140,8 @@ outputs:
       license_file:
         - LICENSE.txt
         - Acknowledgements.txt
+      dev_url: https://github.com/NVIDIA/nvImageCodec
+      doc_url: https://docs.nvidia.com/cuda/nvimagecodec/index.html
 
   - name: libnvimgcodec{{ somajor }}
     files:
@@ -172,7 +173,7 @@ outputs:
         - {{ compiler('cuda') }}
         - {{ compiler('cxx') }}
         - {{ stdlib('c') }}
-        - arm-variant * {{ arm_variant_type }}  # [linux and aarch64 and cuda_compiler_version != "None"]
+        - arm-variant * {{ arm_variant_type }}  # [linux and aarch64]
       host:
         - cuda-version {{ cuda_compiler_version }}
         - cuda-cudart-dev
@@ -212,6 +213,9 @@ outputs:
       license_file:
         - LICENSE.txt
         - Acknowledgements.txt
+      dev_url: https://github.com/NVIDIA/nvImageCodec
+      doc_url: https://docs.nvidia.com/cuda/nvimagecodec/index.html
+
 
 # loadable modules; optional and only needed at runtime
 
@@ -224,7 +228,7 @@ outputs:
         - {{ compiler('c') }}
         - {{ compiler('cxx') }}
         - {{ stdlib('c') }}
-        - arm-variant * {{ arm_variant_type }}  # [linux and aarch64 and cuda_compiler_version != "None"]
+        - arm-variant * {{ arm_variant_type }}  # [linux and aarch64]
       host:
         - libjpeg-turbo
     test:
@@ -240,6 +244,8 @@ outputs:
       license_file:
         - LICENSE.txt
         - Acknowledgements.txt
+      dev_url: https://github.com/NVIDIA/nvImageCodec
+      doc_url: https://docs.nvidia.com/cuda/nvimagecodec/index.html
 
   - name: libnvimgcodec-libtiff-ext
     files:
@@ -250,9 +256,9 @@ outputs:
         - {{ compiler('c') }}
         - {{ compiler('cxx') }}
         - {{ stdlib('c') }}
-        - arm-variant * {{ arm_variant_type }}  # [linux and aarch64 and cuda_compiler_version != "None"]
+        - arm-variant * {{ arm_variant_type }}  # [linux and aarch64]
       host:
-        - libtiff
+        - libtiff {{ libtiff }}
     test:
       commands:
         - test -f ${PREFIX}/lib/extensions/libtiff_ext.so.{{ version }}  # [linux]
@@ -266,6 +272,8 @@ outputs:
       license_file:
         - LICENSE.txt
         - Acknowledgements.txt
+      dev_url: https://github.com/NVIDIA/nvImageCodec
+      doc_url: https://docs.nvidia.com/cuda/nvimagecodec/index.html
 
   - name: libnvimgcodec-libopencv-ext
     files:
@@ -276,10 +284,12 @@ outputs:
         - {{ compiler('c') }}
         - {{ compiler('cxx') }}
         - {{ stdlib('c') }}
-        - arm-variant * {{ arm_variant_type }}  # [linux and aarch64 and cuda_compiler_version != "None"]
+        - arm-variant * {{ arm_variant_type }}  # [linux and aarch64]
       host:
         - libopencv
         - libopencv * headless*
+      run:
+        - opencv * headless*
     test:
       commands:
         - test -f ${PREFIX}/lib/extensions/libopencv_ext.so.{{ version }}  # [linux]
@@ -293,6 +303,8 @@ outputs:
       license_file:
         - LICENSE.txt
         - Acknowledgements.txt
+      dev_url: https://github.com/NVIDIA/nvImageCodec
+      doc_url: https://docs.nvidia.com/cuda/nvimagecodec/index.html
 
 # NOTE: Metadata inheritance from this section to the outputs is all or nothing. Only the
 # -dev package and the feedstock readme are inheriting this metadata.
@@ -306,8 +318,13 @@ about:
   license_file:
     - LICENSE.txt
     - Acknowledgements.txt
+  dev_url: https://github.com/NVIDIA/nvImageCodec
+  doc_url: https://docs.nvidia.com/cuda/nvimagecodec/index.html
 
 extra:
+  skip-lints:
+    - deprecate_license_url
+    - missing_tests
   feedstock-name: libnvimgcodec
   recipe-maintainers:
     - conda-forge/cuda
