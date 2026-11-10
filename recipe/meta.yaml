@@ -11,16 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-{% set version = "0.9.0" %}
+{% set version = "0.10.0" %}
 {% set somajor = version.split('.')[0] %}
 
+# NOTE: Metadata inheritance from this section to the outputs is all or nothing. Only the
+# -dev package and the feedstock readme are inheriting this metadata.
 package:
   name: libnvimgcodec-split
   version: {{ version }}
 
 source:
   url: https://github.com/NVIDIA/nvImageCodec/archive/refs/tags/v{{ version }}.tar.gz
-  sha256: cd92bec0c5293685233d88840d63383b22eaf04a12167308fe3c7c6087ff40f7
+  sha256: d36466e2366585795ecd967c9e8eb62618eb155e6030a9b0f2c3274f260a14f0
   patches:
     - patches/0002-BLD-Make-find_package-OpenCV-verbose-and-required.patch
     - patches/0003-BLD-Disable-non-standard-CUDA-arch-checking.patch
@@ -28,6 +30,7 @@ source:
 build:
   number: 0
   skip: true  # [osx]
+
 requirements:
   build:
     - {{ compiler('c') }}
@@ -56,7 +59,6 @@ requirements:
     - zstd {{ zstd }}
 
 outputs:
-
   - name: libnvimgcodec-dev
     build:
       run_exports:
@@ -117,8 +119,7 @@ outputs:
         - test -f ${PREFIX}/lib/cmake/nvimgcodec/nvimgcodecConfig.cmake  # [unix]
         - cmake ${CMAKE_ARGS} -GNinja test  # [unix]
         - cmake --build .  # [unix]
-        # - test ! -f ${PREFIX}/lib/libnvimgcodec_static.a  # [unix]
-
+  # - test ! -f ${PREFIX}/lib/libnvimgcodec_static.a  # [unix]
   - name: libnvimgcodec
     build:
       noarch: generic
@@ -142,7 +143,6 @@ outputs:
         - Acknowledgements.txt
       dev_url: https://github.com/NVIDIA/nvImageCodec
       doc_url: https://docs.nvidia.com/cuda/nvimagecodec/index.html
-
   - name: libnvimgcodec{{ somajor }}
     files:
       include:
@@ -159,8 +159,8 @@ outputs:
         - Library/bin/extensions/*libjpeg*  # [win]
     build:
       missing_dso_whitelist:
-        - '*/libcuda.so.*'  # [linux]
-        - '*/nvcuda.dll'  # [win]
+        - "*/libcuda.so.*"  # [linux]
+        - "*/nvcuda.dll"  # [win]
       # Implement enhanced CUDA compatability for CTK packages
       ignore_run_exports:
         - cuda-version
@@ -216,9 +216,28 @@ outputs:
       dev_url: https://github.com/NVIDIA/nvImageCodec
       doc_url: https://docs.nvidia.com/cuda/nvimagecodec/index.html
 
+about:
+  home: https://github.com/NVIDIA/nvImageCodec
+  summary: The C API development package for nvImageCodec.
+  description: >
+    nvImageCodec is an open-source library of accelerated codecs with unified interface. This package is the C-API only. See nvimgcodec for the Python-API.
+  license: Apache-2.0
+  license_family: APACHE
+  license_file:
+    - LICENSE.txt
+    - Acknowledgements.txt
+  dev_url: https://github.com/NVIDIA/nvImageCodec
+  doc_url: https://docs.nvidia.com/cuda/nvimagecodec/index.html
 
-# loadable modules; optional and only needed at runtime
+extra:
+  skip-lints:
+    - deprecate_license_url
+    - missing_tests
+  feedstock-name: libnvimgcodec
+  recipe-maintainers:
+    - conda-forge/cuda
 
+<conda_recipe_manager.types.SentinelType object at 0x7f3ec4b06270>:  # loadable modules; optional and only needed at runtime
   - name: libnvimgcodec-libjpeg-turbo-ext
     files:
       - lib/extensions/*libjpeg*.so.*  # [linux]
@@ -246,7 +265,6 @@ outputs:
         - Acknowledgements.txt
       dev_url: https://github.com/NVIDIA/nvImageCodec
       doc_url: https://docs.nvidia.com/cuda/nvimagecodec/index.html
-
   - name: libnvimgcodec-libtiff-ext
     files:
       - lib/extensions/*libtiff*.so.*  # [linux]
@@ -274,7 +292,6 @@ outputs:
         - Acknowledgements.txt
       dev_url: https://github.com/NVIDIA/nvImageCodec
       doc_url: https://docs.nvidia.com/cuda/nvimagecodec/index.html
-
   - name: libnvimgcodec-libopencv-ext
     files:
       - lib/extensions/*libopencv_ext.so.*  # [linux]
@@ -305,26 +322,3 @@ outputs:
         - Acknowledgements.txt
       dev_url: https://github.com/NVIDIA/nvImageCodec
       doc_url: https://docs.nvidia.com/cuda/nvimagecodec/index.html
-
-# NOTE: Metadata inheritance from this section to the outputs is all or nothing. Only the
-# -dev package and the feedstock readme are inheriting this metadata.
-about:
-  home: https://github.com/NVIDIA/nvImageCodec
-  summary: The C API development package for nvImageCodec.
-  description: >
-    nvImageCodec is an open-source library of accelerated codecs with unified interface. This package is the C-API only. See nvimgcodec for the Python-API.
-  license: Apache-2.0
-  license_family: APACHE
-  license_file:
-    - LICENSE.txt
-    - Acknowledgements.txt
-  dev_url: https://github.com/NVIDIA/nvImageCodec
-  doc_url: https://docs.nvidia.com/cuda/nvimagecodec/index.html
-
-extra:
-  skip-lints:
-    - deprecate_license_url
-    - missing_tests
-  feedstock-name: libnvimgcodec
-  recipe-maintainers:
-    - conda-forge/cuda
