@@ -27,7 +27,10 @@ source:
 
 build:
   number: 0
-  skip: true  # [osx]
+  # osx: no CUDA toolkit/driver support on macOS at all.
+  # win-arm64: libnvtiff-dev/libnvjpeg2k-dev can never exist here since NVIDIA
+  # only publishes those redistributables for linux-x86_64/sbsa/aarch64/windows-x86_64.
+  skip: true  # [osx or (win and arm64)]
 requirements:
   build:
     - {{ compiler('c') }}
